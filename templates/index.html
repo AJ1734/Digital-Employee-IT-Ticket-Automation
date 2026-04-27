@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI Digital Employee – IT Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:        #080c10;
+  --surface:   #0d1117;
+  --card:      #111820;
+  --border:    #1e2d3d;
+  --accent:    #00e5ff;
+  --accent2:   #7c3aed;
+  --green:     #00ff88;
+  --yellow:    #ffcc00;
+  --red:       #ff4560;
+  --orange:    #ff6b35;
+  --text:      #c9d1d9;
+  --muted:     #6e7f8d;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-ui:   'Syne', sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:13px;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Animated grid background */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+/* Header */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,12,16,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 24px;
+  display:flex;align-items:center;gap:16px;
+}
+.logo{
+  font-family:var(--font-ui);font-size:18px;font-weight:800;
+  color:var(--accent);letter-spacing:-.5px;
+}
+.logo span{color:var(--text);font-weight:400;}
+.pulse{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 0 rgba(0,255,136,.6);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(0,255,136,.6);}
+  70%{box-shadow:0 0 0 8px rgba(0,255,136,0);}
+  100%{box-shadow:0 0 0 0 rgba(0,255,136,0);}
+}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:20px;}
+#clock{color:var(--muted);font-size:12px;}
+
+/* Layout */
+.container{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto auto 1fr;
+  gap:16px;
+  padding:16px 24px;
+  max-width:1600px;margin:0 auto;
+}
+
+/* Stats row */
+.stats-row{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px 20px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.stat-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:var(--accent);
+  opacity:.7;
+}
+.stat-card:nth-child(2)::before{background:var(--green);}
+.stat-card:nth-child(3)::before{background:var(--yellow);}
+.stat-card:nth-child(4)::before{background:var(--accent2);}
+.stat-label{
+  font-size:10px;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--muted);margin-bottom:8px;
+}
+.stat-value{
+  font-family:var(--font-ui);font-size:28px;font-weight:800;
+  color:var(--accent);line-height:1;
+}
+.stat-card:nth-child(2) .stat-value{color:var(--green);}
+.stat-card:nth-child(3) .stat-value{color:var(--yellow);}
+.stat-card:nth-child(4) .stat-value{color:var(--accent2);}
+
+/* Panel */
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  display:flex;flex-direction:column;
+  min-height:400px;
+  max-height:560px;
+}
+.panel-header{
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-ui);font-size:13px;font-weight:600;
+  color:var(--text);text-transform:uppercase;letter-spacing:1px;
+  flex-shrink:0;
+}
+.panel-header .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);
+}
+.panel-body{
+  overflow-y:auto;flex:1;padding:8px;
+}
+.panel-body::-webkit-scrollbar{width:4px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* Approval panel spans full width */
+.approval-panel{grid-column:1/-1;}
+
+/* Ticket item */
+.ticket-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--border);
+  border-radius:6px;
+  padding:12px 14px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:all .2s;
+  position:relative;
+}
+.ticket-item:hover{border-color:var(--accent);background:rgba(0,229,255,.04);}
+
+.ticket-item.priority-high{border-left-color:var(--red);}
+.ticket-item.priority-medium{border-left-color:var(--yellow);}
+.ticket-item.priority-low{border-left-color:var(--green);}
+
+.ticket-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ticket-id{color:var(--accent);font-size:11px;font-weight:600;}
+.ticket-subject{flex:1;color:var(--text);font-size:12px;font-weight:600;}
+
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 8px;border-radius:3px;
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+}
+.badge-queued{background:rgba(110,127,141,.15);color:var(--muted);}
+.badge-in-progress{background:rgba(0,229,255,.15);color:var(--accent);}
+.badge-resolved{background:rgba(0,255,136,.15);color:var(--green);}
+.badge-escalated{background:rgba(255,69,96,.15);color:var(--red);}
+.badge-pending_approval{background:rgba(255,204,0,.15);color:var(--yellow);}
+
+.badge-high{background:rgba(255,69,96,.12);color:var(--red);}
+.badge-medium{background:rgba(255,204,0,.12);color:var(--yellow);}
+.badge-low{background:rgba(0,255,136,.12);color:var(--green);}
+
+.ticket-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ticket-system{color:var(--muted);font-size:11px;}
+
+.process-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:8px;
+  padding:4px 12px;border-radius:4px;
+  background:rgba(0,229,255,.1);
+  color:var(--accent);
+  border:1px solid rgba(0,229,255,.3);
+  font-family:var(--font-mono);font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.process-btn:hover{background:rgba(0,229,255,.2);border-color:var(--accent);}
+.process-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Activity feed */
+.activity-item{
+  display:flex;gap:10px;
+  padding:8px 10px;
+  border-radius:4px;
+  margin-bottom:4px;
+  font-size:11px;
+  line-height:1.5;
+  animation:fadeIn .3s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+
+.activity-item:hover{background:rgba(255,255,255,.02);}
+.activity-ts{color:var(--muted);font-size:10px;white-space:nowrap;padding-top:1px;min-width:65px;}
+.activity-badge{
+  padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;
+  height:fit-content;margin-top:2px;
+}
+.step-intake{background:rgba(124,58,237,.2);color:var(--accent2);}
+.step-rag_retrieval{background:rgba(0,229,255,.15);color:var(--accent);}
+.step-agent_start,.step-agent_complete{background:rgba(0,255,136,.15);color:var(--green);}
+.step-agent_error{background:rgba(255,69,96,.15);color:var(--red);}
+.step-approval_gate,.step-approval_granted,.step-approval_rejected{background:rgba(255,204,0,.15);color:var(--yellow);}
+.step-default{background:rgba(110,127,141,.15);color:var(--muted);}
+
+.activity-text{color:var(--text);flex:1;}
+.activity-tid{color:var(--accent);font-size:9px;}
+
+/* Approval cards */
+.approval-card{
+  background:var(--surface);
+  border:1px solid rgba(255,204,0,.3);
+  border-left:4px solid var(--yellow);
+  border-radius:6px;
+  padding:16px;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:16px;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+
+.approval-info{flex:1;}
+.approval-title{
+  font-family:var(--font-ui);font-size:13px;font-weight:600;
+  color:var(--yellow);margin-bottom:4px;
+}
+.approval-sub{color:var(--muted);font-size:11px;line-height:1.5;}
+.approval-actions{display:flex;gap:8px;}
+
+.btn-approve, .btn-reject{
+  padding:8px 20px;border-radius:5px;
+  font-family:var(--font-mono);font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .15s;border:none;letter-spacing:.5px;
+}
+.btn-approve{
+  background:rgba(0,255,136,.15);color:var(--green);
+  border:1px solid rgba(0,255,136,.4);
+}
+.btn-approve:hover{background:rgba(0,255,136,.25);box-shadow:0 0 12px rgba(0,255,136,.2);}
+.btn-reject{
+  background:rgba(255,69,96,.12);color:var(--red);
+  border:1px solid rgba(255,69,96,.3);
+}
+.btn-reject:hover{background:rgba(255,69,96,.22);box-shadow:0 0 12px rgba(255,69,96,.2);}
+
+.empty-state{
+  text-align:center;padding:40px 20px;
+  color:var(--muted);font-size:12px;
+}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+
+/* New ticket form */
+.new-ticket-form{
+  grid-column:1/-1;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px 18px;
+}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;}
+.form-group label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.form-group input, .form-group select{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font-mono);font-size:12px;
+  padding:8px 10px;border-radius:5px;outline:none;
+  transition:border-color .15s;
+}
+.form-group input:focus, .form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--surface);}
+
+.submit-btn{
+  padding:8px 20px;border-radius:5px;
+  background:rgba(0,229,255,.12);
+  color:var(--accent);
+  border:1px solid rgba(0,229,255,.35);
+  font-family:var(--font-mono);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.submit-btn:hover{background:rgba(0,229,255,.22);box-shadow:0 0 16px rgba(0,229,255,.15);}
+
+/* Ticker band */
+.ticker{
+  grid-column:1/-1;
+  background:rgba(0,229,255,.05);
+  border:1px solid rgba(0,229,255,.1);
+  border-radius:4px;
+  padding:6px 12px;
+  font-size:11px;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.ticker-label{color:var(--accent);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+
+/* Responsive */
+@media(max-width:900px){
+  .container{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .approval-panel{grid-column:1;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AI Digital<span> Employee</span></div>
+  <div class="pulse"></div>
+  <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">IT Operations</span>
+  <div class="header-right">
+    <span style="color:var(--muted);font-size:11px;" id="api-status">● Checking API…</span>
+    <span id="clock" style="font-size:11px;"></span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value" id="stat-total">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Auto-Resolve Rate</div>
+      <div class="stat-value" id="stat-rate">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Processed Today</div>
+      <div class="stat-value" id="stat-today">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending Approval</div>
+      <div class="stat-value" id="stat-pending">–</div>
+    </div>
+  </div>
+
+  <!-- New ticket form -->
+  <div class="new-ticket-form">
+    <div style="font-family:var(--font-ui);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;">+ Submit New Ticket</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>User Email</label>
+        <input type="email" id="f-email" placeholder="alice@corp.com"/>
+      </div>
+      <div class="form-group" style="flex:2;">
+        <label>Subject</label>
+        <input type="text" id="f-subject" placeholder="Describe the issue…"/>
+      </div>
+      <div class="form-group">
+        <label>System</label>
+        <select id="f-system">
+          <option>Active Directory</option>
+          <option>Email Server</option>
+          <option>VPN Gateway</option>
+          <option>File Share Server</option>
+          <option>Database Server</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="f-priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+      <button class="submit-btn" onclick="submitTicket()">Submit →</button>
+    </div>
+  </div>
+
+  <!-- Ticket queue -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="dot"></div>
+      Ticket Queue
+      <span id="queue-count" style="margin-left:auto;font-size:11px;color:var(--muted);">0 tickets</span>
+    </div>
+    <div class="panel-body" id="ticket-list">
+      <div class="empty-state"><div class="empty-icon">📋</div>Loading tickets…</div>
+    </div>
+  </div>
+
+  <!-- Activity feed -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="dot" style="background:var(--green);"></div>
+      Agent Activity Feed
+      <span style="margin-left:auto;font-size:10px;color:var(--muted);">LIVE</span>
+    </div>
+    <div class="panel-body" id="activity-feed">
+      <div class="empty-state"><div class="empty-icon">🤖</div>Awaiting agent activity…</div>
+    </div>
+  </div>
+
+  <!-- Approval gate -->
+  <div class="panel approval-panel">
+    <div class="panel-header">
+      <div class="dot" style="background:var(--yellow);animation:pulse 1s infinite;"></div>
+      Approval Gate
+      <span id="approval-count" style="margin-left:auto;font-size:11px;color:var(--yellow);">0 pending</span>
+    </div>
+    <div class="panel-body" id="approval-list">
+      <div class="empty-state"><div class="empty-icon">✅</div>No actions pending approval</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = '';
+let lastTickets = [], lastActivity = 0, processingSet = new Set();
+
+function fmt(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts + (ts.endsWith('Z') ? '' : 'Z'));
+  return d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function badge(cls, text) {
+  return `<span class="badge badge-${cls}">${text}</span>`;
+}
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB');
+}, 1000);
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+async function fetchStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const d = await r.json();
+    document.getElementById('stat-total').textContent = d.total_tickets ?? '–';
+    document.getElementById('stat-rate').textContent = d.auto_resolve_rate != null ? d.auto_resolve_rate + '%' : '–';
+    document.getElementById('stat-today').textContent = d.tickets_today ?? '–';
+    document.getElementById('stat-pending').textContent = d.pending_approval ?? '–';
+  } catch(e) {}
+}
+
+// ── Tickets ────────────────────────────────────────────────────────────────
+async function fetchTickets() {
+  try {
+    const r = await fetch(`${API}/api/tickets`);
+    const d = await r.json();
+    renderTickets(d.tickets || []);
+    renderApprovals(d.tickets || []);
+  } catch(e) {}
+}
+
+function renderTickets(tickets) {
+  const el = document.getElementById('ticket-list');
+  document.getElementById('queue-count').textContent = tickets.length + ' ticket' + (tickets.length!==1?'s':'');
+
+  if (!tickets.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>No tickets found</div>';
+    return;
+  }
+
+  el.innerHTML = tickets.map(t => {
+    const processing = processingSet.has(t.id) || t.status === 'in-progress';
+    const canProcess = ['queued'].includes(t.status);
+    return `
+    <div class="ticket-item priority-${t.priority}" id="ticket-${t.id}">
+      <div class="ticket-top">
+        <span class="ticket-id">#${String(t.id).padStart(4,'0')}</span>
+        <span class="ticket-subject">${esc(t.subject)}</span>
+        ${badge(t.status, t.status.replace('_',' '))}
+      </div>
+      <div class="ticket-meta">
+        ${badge('priority-'+t.priority, t.priority)}
+        <span class="ticket-system">${esc(t.system||'–')}</span>
+        <span style="color:var(--muted);font-size:10px;">· ${esc(t.user_name||'Unknown')} · ${fmt(t.created_at)}</span>
+      </div>
+      ${canProcess ? `<button class="process-btn" onclick="processTicket(${t.id},this)" ${processing?'disabled':''}>
+        ${processing ? '⟳ Processing…' : '▶ Process with AI'}
+      </button>` : ''}
+      ${t.notes ? `<div style="margin-top:6px;font-size:10px;color:var(--muted);border-left:2px solid var(--border);padding-left:8px;">${esc(t.notes.substring(0,120))}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderApprovals(tickets) {
+  const pending = tickets.filter(t => t.status === 'pending_approval');
+  document.getElementById('approval-count').textContent = pending.length + ' pending';
+  const el = document.getElementById('approval-list');
+  if (!pending.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div>No actions pending approval</div>';
+    return;
+  }
+  el.innerHTML = pending.map(t => `
+    <div class="approval-card" id="approval-${t.id}">
+      <div style="font-size:20px;">⚠️</div>
+      <div class="approval-info">
+        <div class="approval-title">High-Risk Action – Ticket #${String(t.id).padStart(4,'0')}</div>
+        <div class="approval-sub">
+          <strong>${esc(t.subject)}</strong><br/>
+          System: <span style="color:var(--yellow)">${esc(t.system||'–')}</span> ·
+          User: ${esc(t.user_name||'Unknown')}<br/>
+          ${t.notes ? '<span style="color:var(--muted)">'+esc(t.notes.substring(0,120))+'</span>' : ''}
+        </div>
+      </div>
+      <div class="approval-actions">
+        <button class="btn-approve" onclick="takeAction(${t.id},'approve',this)">✓ Approve</button>
+        <button class="btn-reject"  onclick="takeAction(${t.id},'reject',this)">✗ Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function processTicket(id, btn) {
+  btn.disabled = true;
+  btn.textContent = '⟳ Processing…';
+  processingSet.add(id);
+  try {
+    await fetch(`${API}/api/tickets/${id}/process`, {method:'POST'});
+  } catch(e) {}
+}
+
+async function takeAction(id, action, btn) {
+  btn.disabled = true;
+  const card = document.getElementById('approval-'+id);
+  if (card) { card.style.opacity = '.5'; card.style.pointerEvents='none'; }
+  try {
+    await fetch(`${API}/api/tickets/${id}/${action}`, {method:'POST'});
+    setTimeout(fetchTickets, 600);
+  } catch(e) {}
+}
+
+// ── Activity feed ──────────────────────────────────────────────────────────
+async function fetchActivity() {
+  try {
+    const r = await fetch(`${API}/api/activity?limit=60`);
+    const d = await r.json();
+    const items = d.activity || [];
+    if (items.length === lastActivity && lastActivity > 0) return;
+    lastActivity = items.length;
+    renderActivity(items);
+  } catch(e) {}
+}
+
+function stepClass(step) {
+  const map = {
+    intake:'intake', rag_retrieval:'rag_retrieval',
+    agent_start:'agent_start', agent_complete:'agent_complete',
+    agent_error:'agent_error', approval_gate:'approval_gate',
+    approval_granted:'approval_granted', approval_rejected:'approval_rejected'
+  };
+  return 'step-' + (map[step] || 'default');
+}
+
+function stepLabel(step) {
+  const labels = {
+    intake:'INTAKE', rag_retrieval:'RAG', agent_start:'START',
+    agent_complete:'DONE', agent_error:'ERROR', approval_gate:'GATE',
+    approval_granted:'APPROVED', approval_rejected:'REJECTED',
+    'tool:reset_password':'TOOL', 'tool:restart_service':'TOOL',
+    'tool:fetch_logs':'TOOL', 'tool:generate_report':'TOOL',
+  };
+  return labels[step] || step.toUpperCase().substring(0,8);
+}
+
+function renderActivity(items) {
+  const el = document.getElementById('activity-feed');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🤖</div>Awaiting agent activity…</div>';
+    return;
+  }
+  el.innerHTML = items.map(a => `
+    <div class="activity-item">
+      <span class="activity-ts">${fmt(a.timestamp)}</span>
+      <span class="activity-badge ${stepClass(a.step)}">${stepLabel(a.step)}</span>
+      <span class="activity-tid">#${String(a.ticket_id).padStart(4,'0')}</span>
+      <span class="activity-text">${esc(a.detail.substring(0,120))}</span>
+    </div>
+  `).join('');
+}
+
+// ── New ticket ─────────────────────────────────────────────────────────────
+async function submitTicket() {
+  const email   = document.getElementById('f-email').value.trim();
+  const subject = document.getElementById('f-subject').value.trim();
+  const system  = document.getElementById('f-system').value;
+  const priority= document.getElementById('f-priority').value;
+  if (!email || !subject) { alert('Please fill in email and subject.'); return; }
+  try {
+    const r = await fetch(`${API}/api/tickets`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_email:email, subject, system, priority})
+    });
+    const d = await r.json();
+    document.getElementById('f-email').value = '';
+    document.getElementById('f-subject').value = '';
+    fetchTickets();
+    fetchStats();
+  } catch(e) { alert('Failed to submit ticket: ' + e); }
+}
+
+// ── API check ──────────────────────────────────────────────────────────────
+async function checkApi() {
+  const el = document.getElementById('api-status');
+  try {
+    await fetch(`${API}/api/stats`);
+    el.textContent = '● API Online';
+    el.style.color = 'var(--green)';
+  } catch(e) {
+    el.textContent = '● API Offline';
+    el.style.color = 'var(--red)';
+  }
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Poll ───────────────────────────────────────────────────────────────────
+function pollAll() {
+  fetchStats();
+  fetchTickets();
+  fetchActivity();
+}
+
+checkApi();
+pollAll();
+setInterval(pollAll, 3500);
+</script>
+</body>
+</html>
